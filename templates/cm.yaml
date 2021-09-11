@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: glauth-config
+data:
+{{- if eq .Values.backend.type "config" }}
+  config.cfg: |-
+{{ .Files.Get "sample-simple.cfg" | indent 4 }}
+{{- end}}

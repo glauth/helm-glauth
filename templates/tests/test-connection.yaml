@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "glauth.fullname" . }}-test-connection"
+  labels:
+    {{- include "glauth.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['{{ include "glauth.fullname" . }}:{{ .Values.service.port }}']
+  restartPolicy: Never

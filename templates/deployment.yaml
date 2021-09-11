@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "glauth.fullname" . }}
+  labels:
+    app: {{ template "glauth.fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "glauth.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "glauth.fullname" . }}
+    spec:
+      containers:
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.service.ports.internal }}
+        command: ["/app/glauth", "-c", "/config/config.cfg"]
+        livenessProbe:
+          exec:
+            command:
+            - cat
+            - /dev/null
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: {{ .Chart.Name }}
+          mountPath: /config
+        readinessProbe:
+          exec:
+            command:
+            - cat
+            - /dev/null
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: {{ .Chart.Name }}
+        configMap:
+          name: glauth-config

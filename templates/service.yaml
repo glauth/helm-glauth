@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "glauth.fullname" . }}
+  labels:
+    name: {{ template "glauth.fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+  - port: {{ .Values.service.ports.external }}
+    targetPort: {{ .Values.service.ports.internal }}
+{{- if .Values.service.ports.node }}
+    nodePort: {{ .Values.service.ports.node }}
+{{- end}}
+    protocol: TCP
+    name: {{ template "glauth.fullname" . }}
+  selector:
+    app: {{ template "glauth.fullname" . }}
