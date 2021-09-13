@@ -18,3 +18,7 @@ To install the <chart-name> chart:
 To uninstall the chart:
 
     helm delete my-glauth
+
+--
+
+  (gh action v0.0.1)
