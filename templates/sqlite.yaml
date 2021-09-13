@@ -1,0 +1,23 @@
+{{- if eq .Values.backend.type "database" }}
+{{- if eq .Values.database.engine "sqlite" }}
+{{- if .Values.database.shell }}
+apiVersion: v1 
+kind: Pod 
+metadata: 
+  name: glauth-sqlite-client
+spec: 
+  containers: 
+  - name: glauth-sqlite-client
+    image: nouchka/sqlite3
+    stdin: true 
+    tty: true 
+    volumeMounts:
+    - name: {{ .Chart.Name }}-data
+      mountPath: /root/db
+  volumes:
+  - name: {{ .Chart.Name }}-data
+    persistentVolumeClaim:
+      claimName: {{ .Chart.Name }}-data
+{{- end}}
+{{- end}}
+{{- end}}

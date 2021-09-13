@@ -3,7 +3,13 @@ kind: ConfigMap
 metadata:
   name: glauth-config
 data:
-{{- if eq .Values.backend.type "config" }}
+{{- if .Values.backend.file }}
   config.cfg: |-
-{{ .Files.Get "sample-simple.cfg" | indent 4 }}
+{{ .Files.Get .Values.backend.file | indent 4 }}
+{{- else if eq .Values.backend.type "config" }}
+  config.cfg: |-
+{{ .Files.Get "config/sample-simple.cfg" | indent 4 }}
+{{- else if eq .Values.backend.type "database" }}
+  config.cfg: |-
+{{ .Files.Get "config/sample-database.cfg" | indent 4 }}
 {{- end}}

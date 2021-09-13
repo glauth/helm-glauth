@@ -20,26 +20,40 @@ spec:
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
-        - containerPort: {{ .Values.service.ports.internal }}
-        command: ["/app/glauth", "-c", "/config/config.cfg"]
+{{- range $port := .Values.service.ports }}
+        - containerPort: {{ $port.internal }}
+{{- end}}
+        command: ["/app/glauth", "-c", "/app/config/config.cfg"]
         livenessProbe:
           exec:
             command:
-            - cat
-            - /dev/null
+            - sh
+            - "-c"
+            - "echo OK"
           initialDelaySeconds: 5
           periodSeconds: 5
         volumeMounts:
-        - name: {{ .Chart.Name }}
-          mountPath: /config
+{{- if .Values.config.storage }}
+        - name: {{ .Chart.Name }}-data
+          mountPath: /app/config
+{{- end}}
+        - name: {{ .Chart.Name }}-config
+          mountPath: /app/config/config.cfg
+          subPath: config.cfg
         readinessProbe:
           exec:
             command:
-            - cat
-            - /dev/null
+            - sh
+            - "-c"
+            - "echo OK"
           initialDelaySeconds: 5
           periodSeconds: 5
       volumes:
-      - name: {{ .Chart.Name }}
+{{- if .Values.config.storage }}
+      - name: {{ .Chart.Name }}-data
+        persistentVolumeClaim:
+          claimName: {{ .Chart.Name }}-data
+{{- end}}
+      - name: {{ .Chart.Name }}-config
         configMap:
           name: glauth-config

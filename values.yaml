@@ -1,12 +1,26 @@
 # Default values for glauth.
 # This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
 
 replicaCount: 1
 
 image:
-  repository: "glauth/glauth"
-  tag: "v2.0.0"
+
+  # --------------------------------------------------------------------------------
+  # Repository to pull from the registry.
+  # --------------------------------------------------------------------------------
+
+  # Default "config" image.
+  #repository: "glauth/glauth"
+
+  # Use alternate image for SQL plugins.
+  repository: "glauth/glauth-plugins"
+
+  # Production tag
+  #tag: "v2.0.0"
+
+  # Testing tag
+  tag: "nightly"
+
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []
@@ -14,31 +28,88 @@ nameOverride: ""
 fullnameOverride: ""
 
 config:
+
+  # --------------------------------------------------------------------------------
+  # Will be used, if our backend is SQLite, to create a storage volume for the db
+  # Also, to store cert information if using LDAPS
+  # --------------------------------------------------------------------------------
+
   storage:
     size: 20G
-    # You may wish to override the accessMode; for instance if you
+
+    # You may wish to override the access type; for instance if you
     # are setting up a single node with hostPath, since hostPath
     # does not support multiple access but we are requesting that.
-    # mode: readWriteOnce
+    # access: readWriteOnce
     #
     # Or you could make sure that a different storageClass
     # is picked upon instantiation.
     # class: xxxx
+    #
+    # Alternatively, you could use an existing claim.
+    # existingClaim: true
+
+# --------------------------------------------------------------------------------
+# This is in addition to specifying backend type in the cfg file
+# --------------------------------------------------------------------------------
 
 backend:
-  type: config
+
+  # Possible values: 'config' or 'database'
+  type: database
+
+  # If provided, this is the name of a local config file that will be
+  # stored in our configuration map.
+  # Note that when using 'config' you could simply edit `sample-simple.cfg`
+  # and not provide an alternate file; you could similarly edit `sample-database.cfg`
+  # to support a non-SQLIte database.
+  #file: example.cfg
+
+database:
+
+  engine: sqlite
+
+  # If our engine is 'sqlite' then this runs a separate pod,
+  # that we can use to provision/update our database.
+  # For security reasons, you should disable this pod when not in use.
+  # Simply run `helm upgrade` instead of `helm install` after setting the
+  # value below to false, and the pod will be terminated. Of course, it can be
+  # restarted in a similar manner.
+  shell: true
 
 service:
   name: glauth
+
+  # --------------------------------------------------------------------------------
+  # How do we expose the server to the outside world?
+  # --------------------------------------------------------------------------------
+
   #type: ClusterIP
   #ports:
-  #  external: 3893
-  #  internal: 3893
+  #  - name: ldap
+  #    internal: 3893
+  #    external: 3893
+  #  - name: ldaps
+  #    internal: 3894
+  #    external: 3894
+  #  - name: web
+  #    internal: 5555
+  #    external: 5555
+
   type: NodePort
   ports:
-    external: 3893
-    internal: 3893
-    node: 30389
+    - name: ldap
+      internal: 3893
+      external: 3893
+      node: 30389
+    - name: ldaps
+      internal: 3894
+      external: 3894
+      node: 30636
+    - name: web
+      internal: 5555
+      external: 5555
+      node: 30555
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -61,6 +132,10 @@ securityContext: {}
   # readOnlyRootFilesystem: true
   # runAsNonRoot: true
   # runAsUser: 1000
+
+# --------------------------------------------------------------------------------
+# Untested so far: ingress for port 5555 or even TCP ingress if needed
+# --------------------------------------------------------------------------------
 
 ingress:
   enabled: false

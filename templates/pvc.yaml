@@ -1,22 +1,26 @@
+{{- if .Values.config.storage }}
 {{- if not .Values.config.storage.existingClaim }}
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: glauth-pvc
-  namespace: {{ .Release.Namespace }}
+  name: {{ .Chart.Name }}-data
 spec:
   accessModes:
-{{- if not .Values.config.storage.mode }}
-    - ReadOnlyMany
+{{- if not .Values.config.storage.access }}
+    - ReadWriteMany
 {{- else }}
-    - "{{ .Values.config.storage.mode }}"
+    - "{{ .Values.config.storage.access }}"
+{{- end }}
+{{- if .Values.config.storage.class }}
+  storageClassName: "{{ .Values.config.storage.class }}"
+{{- end }}
+{{- if not .Values.config.storage.mode }}
+  volumeMode: Filesystem
+{{- else }}
+  volumeMode: "{{ .Values.config.storage.mode }}"
 {{- end }}
   resources:
     requests:
       storage: {{ .Values.config.storage.size }}
-{{- if not .Values.config.storage.class }}
-  storageClassName: ""
-{{- else }}
-  storageClassName: "{{ .Values.config.storage.class }}"
 {{- end }}
 {{- end }}
